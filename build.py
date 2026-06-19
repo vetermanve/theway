@@ -9,6 +9,7 @@ import markdown
 ROOT = Path(__file__).parent
 BOOK = ROOT / "book"
 OUT = ROOT / "index.html"
+DIST = ROOT / "dist"
 
 # Порядок разделов книги
 ORDER = [
@@ -48,6 +49,41 @@ def clean(md_text):
     while body and body[-1].strip() in ("", "---"):
         body.pop()
     return title, "\n".join(body).strip()
+
+
+def clean_keep_title(md_text):
+    """Снять служебные пометки черновика, сохранив заголовок главы."""
+    out = []
+    for ln in md_text.splitlines():
+        s = ln.strip()
+        if s.startswith("> Черновик") or s.startswith("*Конец"):
+            continue
+        out.append(ln)
+    while out and out[-1].strip() in ("", "---"):
+        out.pop()
+    return "\n".join(out).strip()
+
+
+def write_combined():
+    """Единый чистый markdown с метаданными для pandoc."""
+    DIST.mkdir(exist_ok=True)
+    # YAML-шапка: строки плотно, без пустых строк внутри блока
+    header = "\n".join([
+        "---",
+        'title: "Путь Ветра"',
+        'subtitle: "Книга наставлений"',
+        'author: "Ветер"',
+        "lang: ru",
+        "---",
+    ])
+    chapters = [
+        clean_keep_title((BOOK / name).read_text(encoding="utf-8"))
+        for name in ORDER
+    ]
+    md = header + "\n\n" + "\n\n".join(chapters) + "\n"
+    md_path = DIST / "_book.md"
+    md_path.write_text(md, encoding="utf-8")
+    return md_path
 
 
 def render():
@@ -200,6 +236,25 @@ footer{max-width:var(--maxw); margin:0 auto; padding:3rem 0 5rem;
   font-size:.82rem; border-top:1px solid var(--border); margin-top:2rem}
 footer a{color:var(--muted)}
 
+/* скачивание */
+#downloads{max-width:var(--maxw); margin:0 auto; padding:1.6rem 0 .6rem;
+  text-align:center}
+#downloads .dl-title{font-family:"Inter",sans-serif; font-size:.72rem;
+  text-transform:uppercase; letter-spacing:.16em; color:var(--faint);
+  font-weight:600; margin-bottom:1rem}
+.dl-row{display:flex; flex-wrap:wrap; justify-content:center; gap:.6rem}
+a.dl{display:inline-flex; align-items:center; gap:.5rem; text-decoration:none;
+  font-family:"Inter",sans-serif; font-size:.9rem; font-weight:500;
+  color:var(--text); background:var(--surface); border:1px solid var(--border);
+  padding:.6rem .95rem; border-radius:12px; box-shadow:var(--shadow);
+  transition:transform .15s ease,border-color .2s,color .2s}
+a.dl:hover{transform:translateY(-2px); border-color:var(--accent);
+  color:var(--accent); text-decoration:none}
+a.dl svg{width:17px; height:17px; opacity:.8}
+a.dl small{color:var(--faint); font-weight:400; font-size:.74rem}
+#downloads .dl-hint{margin-top:.8rem; color:var(--faint);
+  font-family:"Inter",sans-serif; font-size:.78rem}
+
 .totop{position:fixed; right:18px; bottom:18px; z-index:40; opacity:0;
   visibility:hidden; transition:.25s}
 .totop.show{opacity:1; visibility:visible}
@@ -241,6 +296,30 @@ footer a{color:var(--muted)}
     <div class="by">по мотивам канала <a href="https://t.me/vetermind" target="_blank" rel="noopener">&#64;vetermind</a></div>
     <p class="epi">Эта книга не даёт ответы. Она учит спрашивать.</p>
   </div>
+
+  <div id="downloads">
+    <div class="dl-title">Скачать для читалки</div>
+    <div class="dl-row">
+      <a class="dl" href="dist/put-vetra.epub" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        EPUB <small>читалки</small>
+      </a>
+      <a class="dl" href="dist/put-vetra.fb2" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        FB2 <small>читалки</small>
+      </a>
+      <a class="dl" href="dist/put-vetra.pdf" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        PDF <small>компьютер</small>
+      </a>
+      <a class="dl" href="dist/put-vetra-mobile.pdf" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        PDF <small>смартфон</small>
+      </a>
+    </div>
+    <div class="dl-hint">для офлайна и чтения через читалку</div>
+  </div>
+
   <div class="wrap">
 %%CONTENT%%
   </div>
@@ -329,6 +408,45 @@ def main():
     )
     OUT.write_text(html, encoding="utf-8")
     print("Written", OUT, len(html), "bytes")
+    md_path = write_combined()
+    print("Written", md_path)
+    build_ebooks(md_path)
+
+
+def build_ebooks(md_path):
+    """EPUB, FB2, PDF (компьютер и смартфон) через pandoc + xelatex."""
+    import subprocess
+
+    epub = DIST / "put-vetra.epub"
+    fb2 = DIST / "put-vetra.fb2"
+    pdf = DIST / "put-vetra.pdf"
+    pdf_m = DIST / "put-vetra-mobile.pdf"
+
+    common = ["pandoc", str(md_path), "--toc", "--toc-depth=1"]
+
+    jobs = [
+        (["pandoc", str(md_path), "--toc", "--toc-depth=1",
+          "--split-level=1", "-o", str(epub)], "EPUB"),
+        (["pandoc", str(md_path), "-o", str(fb2)], "FB2"),
+        (common + [
+            "--pdf-engine=xelatex", "-V", "mainfont=Georgia",
+            "-V", "fontsize=12pt", "-V", "linestretch=1.25",
+            "-V", "geometry:paperwidth=152mm,paperheight=229mm,margin=18mm",
+            "-V", "linkcolor=RoyalBlue", "-V", "toccolor=black",
+            "-o", str(pdf)], "PDF (компьютер)"),
+        (common + [
+            "--pdf-engine=xelatex", "-V", "mainfont=Georgia",
+            "-V", "fontsize=11pt", "-V", "linestretch=1.3",
+            "-V", "geometry:paperwidth=90mm,paperheight=160mm,margin=6mm",
+            "-V", "linkcolor=RoyalBlue", "-V", "toccolor=black",
+            "-o", str(pdf_m)], "PDF (смартфон)"),
+    ]
+    for cmd, label in jobs:
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, text=True)
+            print("OK", label, "->", cmd[-1])
+        except subprocess.CalledProcessError as e:
+            print("FAIL", label, e.stderr[-800:])
 
 
 if __name__ == "__main__":

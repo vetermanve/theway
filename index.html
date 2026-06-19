@@ -128,6 +128,25 @@ footer{max-width:var(--maxw); margin:0 auto; padding:3rem 0 5rem;
   font-size:.82rem; border-top:1px solid var(--border); margin-top:2rem}
 footer a{color:var(--muted)}
 
+/* скачивание */
+#downloads{max-width:var(--maxw); margin:0 auto; padding:1.6rem 0 .6rem;
+  text-align:center}
+#downloads .dl-title{font-family:"Inter",sans-serif; font-size:.72rem;
+  text-transform:uppercase; letter-spacing:.16em; color:var(--faint);
+  font-weight:600; margin-bottom:1rem}
+.dl-row{display:flex; flex-wrap:wrap; justify-content:center; gap:.6rem}
+a.dl{display:inline-flex; align-items:center; gap:.5rem; text-decoration:none;
+  font-family:"Inter",sans-serif; font-size:.9rem; font-weight:500;
+  color:var(--text); background:var(--surface); border:1px solid var(--border);
+  padding:.6rem .95rem; border-radius:12px; box-shadow:var(--shadow);
+  transition:transform .15s ease,border-color .2s,color .2s}
+a.dl:hover{transform:translateY(-2px); border-color:var(--accent);
+  color:var(--accent); text-decoration:none}
+a.dl svg{width:17px; height:17px; opacity:.8}
+a.dl small{color:var(--faint); font-weight:400; font-size:.74rem}
+#downloads .dl-hint{margin-top:.8rem; color:var(--faint);
+  font-family:"Inter",sans-serif; font-size:.78rem}
+
 .totop{position:fixed; right:18px; bottom:18px; z-index:40; opacity:0;
   visibility:hidden; transition:.25s}
 .totop.show{opacity:1; visibility:visible}
@@ -182,6 +201,30 @@ footer a{color:var(--muted)}
     <div class="by">по мотивам канала <a href="https://t.me/vetermind" target="_blank" rel="noopener">&#64;vetermind</a></div>
     <p class="epi">Эта книга не даёт ответы. Она учит спрашивать.</p>
   </div>
+
+  <div id="downloads">
+    <div class="dl-title">Скачать для читалки</div>
+    <div class="dl-row">
+      <a class="dl" href="dist/put-vetra.epub" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        EPUB <small>читалки</small>
+      </a>
+      <a class="dl" href="dist/put-vetra.fb2" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        FB2 <small>читалки</small>
+      </a>
+      <a class="dl" href="dist/put-vetra.pdf" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        PDF <small>компьютер</small>
+      </a>
+      <a class="dl" href="dist/put-vetra-mobile.pdf" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>
+        PDF <small>смартфон</small>
+      </a>
+    </div>
+    <div class="dl-hint">для офлайна и чтения через читалку</div>
+  </div>
+
   <div class="wrap">
 <section id="sec-0" class="chapter">
 <h1>Пролог. Кто спрашивает</h1>

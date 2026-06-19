@@ -3,6 +3,9 @@
 __pycache__/
 *.pyc
 
+# промежуточный сводник для pandoc (готовые форматы dist/*.{epub,fb2,pdf} коммитим)
+dist/_book.md
+
 # macOS
 .DS_Store
 ._*
